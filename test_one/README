@@ -1,0 +1,22 @@
+This simple application is use to test the TOS_NODE_ID assignment method.
+
+TOS_NODE_ID is variable that can be accessed from within the code.
+Its default value is 1, defined as [uint16_t TOS_NODE_ID = 1] inside "system/tos.h"
+
+Usualy its value is used to identify gateway (Sink, or base-station BS) from
+other nodes and mostly 0 (zero) is used as the gateway ID.
+
+You can set this value from within your code, but then you might need to have
+different copy of the code for each node ID or you can set it during the compile
+and upload time like the following:
+
+to program an IRIS mote with ID 0:
+# make iris install,0 mib520....etc
+
+to program an IRIS mote with ID 1:
+# make iris install,1 mib520....etc
+
+and so on.
+
+So the function of this code is to blink LED 0 id the ID is 0, LED1 for ID 1
+and LED2 for ID 2.
