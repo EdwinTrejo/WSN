@@ -42,6 +42,9 @@
 *.idb
 *.pdb
 
+# NesC
+**/build/iris/
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
