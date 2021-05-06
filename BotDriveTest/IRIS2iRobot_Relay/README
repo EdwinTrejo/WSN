@@ -1,0 +1,23 @@
+To compile the code run:
+
+# make iris
+
+
+To program the iris mote:
+For gateway (Mote 0), the one that will stay connected to the PC, run:
+
+# make iris install,0 mib520,/dev/ttyUSB0
+
+For iRobot node (Mote 1), the one that will connected to the iRobot, run:
+
+# make iris install,1 mib520,/dev/ttyUSB0
+
+----------------
+NOTE:
+
+/dev/ttyUSB0 is the default programming port. Used to program the mote only.
+/dev/ttyUSB1 is the default communication port. Used for serial communication
+with the mote while it is running.
+
+Of any of these ports are in use while connecting the mote to the computer
+the system will use the next available port (e.g. ttyUSB2, ttyUSB3 ...etc)

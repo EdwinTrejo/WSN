@@ -8,6 +8,7 @@ module LEDTestC @safe()
   uses interface AMSend;
   uses interface Leds;
   uses interface SplitControl;
+  uses interface PacketField<uint8_t> as PacketRSSI;
 }
 implementation
 {
@@ -25,6 +26,12 @@ implementation
   void DBGM(const char* message)
   {
     printf(message);
+    printfflush();
+  }
+
+  void DBGM_INT(const char* message, uint16_t value)
+  {
+    printf(message, value);
     printfflush();
   }
 
@@ -54,6 +61,14 @@ implementation
     }*/
   }
 
+  uint16_t getRssi(message_t *message)
+  {
+    if(call PacketRSSI.isSet(message))
+      return (uint16_t) call PacketRSSI.get(message);
+    else
+      return 0xFFFE;
+  }
+
   event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
     call Leds.led1Toggle();
     DBGM("Message Received\r\n");
@@ -64,6 +79,7 @@ implementation
     if (&packet == bufPtr) {
       locked = FALSE;
       call Leds.led0Off();
+      printf("\r\n%u\n\n", getRssi(bufPtr));
     }
   }
 

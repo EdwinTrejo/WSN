@@ -10,6 +10,9 @@ implementation
   components PrintfC;
   components SerialStartC;
   components ActiveMessageC;
+  components RF230ActiveMessageC;
+
+  App -> RF230ActiveMessageC.PacketRSSI;
 
   App.Boot -> MainC.Boot;
 

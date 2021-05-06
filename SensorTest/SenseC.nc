@@ -29,8 +29,11 @@ implementation
   event void Read.readDone(error_t result, uint16_t data)
   {
     if (result == SUCCESS){
-
-      printf(data);
+      //printf("Message: ");
+      //putchar(data);
+      //printf("\r\n");
+      printf("%u\r\n", data);
+      //printfflush();
 
       if (data & 0x0004)
         call Leds.led2On();
@@ -45,10 +48,6 @@ implementation
       else
         call Leds.led0Off();
     }
-    //printf("\r\n");
-    //printf("Message:");
-    //printf("\r\n");
-    //printfflush();
   }
 }
 
