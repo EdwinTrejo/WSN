@@ -29,6 +29,17 @@ implementation
     call Read.read();
   }
 
+  event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) 
+  {
+    //
+    return bufPtr;
+  }
+
+  event void AMSend.sendDone(message_t* bufPtr, error_t error) 
+  {
+    //
+  }
+
   event void Read.readDone(error_t result, uint16_t data)
   {
     if (result == SUCCESS){
