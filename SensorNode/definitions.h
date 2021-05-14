@@ -1,6 +1,11 @@
 #ifndef DEFINITIONS_H__
 #define DEFINITIONS_H__
 
+#define NEW_PRINTF_SEMANTICS
+
+#include "Timer.h"
+#include "printf.h"
+
 #define ROBOT_MOTE 0
 #define GATEWAY_MOTE 1
 

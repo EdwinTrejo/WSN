@@ -1,6 +1,5 @@
 
-#include "Timer.h"
-#include "printf.h"
+#include "definitions.h"
 
 module SenseC {
   uses {

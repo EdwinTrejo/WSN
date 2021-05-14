@@ -1,13 +1,10 @@
+ #include "definitions.h"
 
- #define NEW_PRINTF_SEMANTICS
- #include "printf.h"
-
-configuration SenseAppC
-{
+configuration SenseAppC {
 }
 implementation {
-
-  components SenseC, MainC, LedsC, new TimerMilliC(), new DemoSensorC() as Sensor;
+  components SenseC, MainC, LedsC, new TimerMilliC();
+  components new DemoSensorC() as Sensor;
   components PrintfC;
   components SerialStartC;
   components ActiveMessageC;
