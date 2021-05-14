@@ -9,6 +9,9 @@ module SenseC
     interface Leds;
     interface Timer<TMilli>;
     interface Read<uint16_t>;
+    interface Receive;
+    interface AMSend;
+    interface PacketField<uint8_t> as PacketRSSI;
   }
 }
 

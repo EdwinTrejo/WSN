@@ -10,9 +10,10 @@ implementation {
   components SenseC, MainC, LedsC, new TimerMilliC(), new DemoSensorC() as Sensor;
   components PrintfC;
   components SerialStartC;
-  components ActiveMessageC; 
+  components ActiveMessageC;
   components RF230ActiveMessageC;
 
+  SenseC -> RF230ActiveMessageC.PacketRSSI;
   SenseC.Boot -> MainC;
   SenseC.Leds -> LedsC;
   SenseC.Timer -> TimerMilliC;
