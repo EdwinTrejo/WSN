@@ -31,13 +31,19 @@ implementation {
   }
 
   event void Timer.fired() {
-    post readSensor();
-    //call Read.read();
+    if (TOS_NODE_ID != ROBOT_MOTE)
+      post readSensor();
+    else
+      // something else , I think its check the
+      // message buffer and writo to serial
+      post readSensor();
   }
 
   event void RadioControl.startDone(error_t err) {
     if (TOS_NODE_ID != ROBOT_MOTE)
       call Timer.startPeriodic(SAMPLING_FREQUENCY);
+    else
+      call Timer.startPeriodic(ROBOT_LISTEN_FREQUENCY);
   }
 
   event void RadioControl.stopDone(error_t err) {}
@@ -57,6 +63,8 @@ implementation {
       printf("ID:%u\r\n", _msg->nodeid);
       printf("LIGHT:%u\r\n", _msg->light);
       call Leds.led2Toggle();
+    } else if (TOS_NODE_ID == ROBOT_MOTE) {
+      //message type will include a byte to run the code
     }
     rcv_packet = bufPtr;
     return bufPtr;
@@ -80,7 +88,7 @@ implementation {
       post sendPacket();
     }
 
-    if (TOS_NODE_ID == GATEWAY_MOTE) {
+    if (TOS_NODE_ID == GATEWAY_MOTE && TOS_NODE_ID != ROBOT_MOTE) {
       //still have to send the data
       printf("ID:%u\r\n", TOS_NODE_ID);
       printf("LIGHT:%u\r\n", data);

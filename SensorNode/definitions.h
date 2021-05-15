@@ -8,6 +8,7 @@
 
 // sampling frequency in binary milliseconds
 #define SAMPLING_FREQUENCY 100
+#define ROBOT_LISTEN_FREQUENCY 50
 
 #define ROBOT_MOTE 0
 #define GATEWAY_MOTE 1
