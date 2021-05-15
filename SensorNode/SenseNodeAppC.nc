@@ -11,9 +11,9 @@ implementation {
   components new TimerMilliC();
   components PrintfC;
   components SerialStartC;
-  //components RF230ActiveMessageC;
+  components RF230ActiveMessageC;
 
-  //SenseNodeC -> RF230ActiveMessageC.PacketRSSI;
+  SenseNodeC -> RF230ActiveMessageC.PacketRSSI;
   SenseNodeC.Boot -> MainC;
   SenseNodeC.Leds -> LedsC;
   SenseNodeC.Timer -> TimerMilliC;

@@ -13,7 +13,7 @@ module SenseNodeC {
     //interface ADC as Light;
     //interface WriteData;
     //interface ReadData;
-    //interface PacketField<uint8_t> as PacketRSSI;
+    interface PacketField<uint8_t> as PacketRSSI;
     interface Leds;
   }
 }
@@ -24,6 +24,7 @@ implementation {
 
   task void readSensor();
   task void sendPacket();
+  uint16_t getRssi(message_t *message);
 
   event void Boot.booted() {
     call RadioControl.start();
@@ -50,9 +51,11 @@ implementation {
     //message was received
     if (TOS_NODE_ID == GATEWAY_MOTE) {
       LightMsg * _msg = (LightMsg *)payload;
+      uint8_t rssi = getRssi(bufPtr);
       //LightMsg * _msg = (LightMsg *)bufPtr;
-      printf("%u\r\n", _msg->nodeid);
-      printf("%u\r\n", _msg->light);
+      printf("RSSI:%u\r\n", rssi);
+      printf("ID:%u\r\n", _msg->nodeid);
+      printf("LIGHT:%u\r\n", _msg->light);
       call Leds.led2Toggle();
     }
     rcv_packet = bufPtr;
@@ -79,8 +82,8 @@ implementation {
 
     if (TOS_NODE_ID == GATEWAY_MOTE) {
       //still have to send the data
-      printf("%u\r\n", TOS_NODE_ID);
-      printf("%u\r\n", data);
+      printf("ID:%u\r\n", TOS_NODE_ID);
+      printf("LIGHT:%u\r\n", data);
     }
     /*
     if (result == SUCCESS) {
@@ -104,6 +107,14 @@ implementation {
       call Leds.led1Off();
     }
     */
+  }
+
+  uint16_t getRssi(message_t *message)
+  {
+    if(call PacketRSSI.isSet(message))
+      return (uint16_t) call PacketRSSI.get(message);
+    else
+      return 0xFFFE;
   }
 
   task void sendPacket() {
