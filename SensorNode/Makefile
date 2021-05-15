@@ -1,4 +1,4 @@
-COMPONENT=SenseAppC
+COMPONENT=SenseNodeAppC
 
 #/tinyos/support/make
 PFLAGS += -I%T/sensorboards/mda100
