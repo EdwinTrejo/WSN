@@ -23,6 +23,7 @@ typedef nx_struct LightMsg {
 } LightMsg;
 
 typedef nx_struct RobotMsg {
+	nx_uint16_t nodeid;
 	nx_uint8_t instruction;
 } RobotMsg;
 

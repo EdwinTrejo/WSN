@@ -53,6 +53,7 @@ implementation {
   task void receiveRobotInstruction() {
     RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet, sizeof(RobotMsg));
     uint8_t new_ins = getchar();
+    payload->nodeid = TOS_NODE_ID;
     payload->instruction = new_ins;
     post sendPacket();
   }
@@ -71,8 +72,11 @@ implementation {
     else if (TOS_NODE_ID == ROBOT_MOTE) {
       //message type will include a byte to run the code
       RobotMsg * _msg = (RobotMsg *)payload;
-      uint8_t serial_instruction = _msg->instruction;
-      putchar(serial_instruction);
+      if (_msg->nodeid == GATEWAY_MOTE) {
+        uint8_t serial_instruction = _msg->instruction;
+        putchar(serial_instruction);
+        call Leds.led1Toggle();
+      }
     }
     rcv_packet = bufPtr;
     return bufPtr;
