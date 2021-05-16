@@ -17,16 +17,9 @@ implementation {
   SenseNodeC.Boot -> MainC;
   SenseNodeC.Leds -> LedsC;
   SenseNodeC.Timer -> TimerMilliC;
-
   SenseNodeC.Read -> Sensor;
-
   SenseNodeC.RadioControl -> ActiveMessageC;
   SenseNodeC.AMSend -> AMSenderC;
   SenseNodeC.Receive -> AMReceiverC;
   SenseNodeC.Packet -> ActiveMessageC;
-
-  //SenseNodeC.AMSend -> ActiveMessageC.AMSend[AM_DEMO_MESSAGE];
-  //SenseNodeC.Receive -> ActiveMessageC.Receive[AM_DEMO_MESSAGE];
-
-  //SenceC.Light -> Photo.ExternalPhotoAdc;
 }

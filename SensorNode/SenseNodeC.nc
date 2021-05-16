@@ -8,11 +8,7 @@ module SenseNodeC {
     interface AMSend;
     interface Receive;
     interface Packet;
-
     interface Timer<TMilli>;
-    //interface ADC as Light;
-    //interface WriteData;
-    //interface ReadData;
     interface PacketField<uint8_t> as PacketRSSI;
     interface Leds;
   }
@@ -24,6 +20,7 @@ implementation {
 
   task void readSensor();
   task void sendPacket();
+  task void receiveRobotInstruction();
   uint16_t getRssi(message_t *message);
 
   event void Boot.booted() {
@@ -36,7 +33,7 @@ implementation {
     else
       // something else , I think its check the
       // message buffer and writo to serial
-      post readSensor();
+      post receiveRobotInstruction();
   }
 
   event void RadioControl.startDone(error_t err) {
@@ -53,6 +50,13 @@ implementation {
       post readSensor();
   }
 
+  task void receiveRobotInstruction() {
+    RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet, sizeof(RobotMsg));
+    uint8_t new_ins = getchar();
+    payload->instruction = new_ins;
+    post sendPacket();
+  }
+
   event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
     //message was received
     if (TOS_NODE_ID == GATEWAY_MOTE) {
@@ -63,8 +67,12 @@ implementation {
       printf("ID:%u\r\n", _msg->nodeid);
       printf("LIGHT:%u\r\n", _msg->light);
       call Leds.led2Toggle();
-    } else if (TOS_NODE_ID == ROBOT_MOTE) {
+    }
+    else if (TOS_NODE_ID == ROBOT_MOTE) {
       //message type will include a byte to run the code
+      RobotMsg * _msg = (RobotMsg *)payload;
+      uint8_t serial_instruction = _msg->instruction;
+      putchar(serial_instruction);
     }
     rcv_packet = bufPtr;
     return bufPtr;
@@ -127,8 +135,13 @@ implementation {
 
   task void sendPacket() {
     //sender
-    if (TOS_NODE_ID != GATEWAY_MOTE) {
+    if (TOS_NODE_ID != GATEWAY_MOTE && TOS_NODE_ID != ROBOT_MOTE) {
       if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(LightMsg)) != SUCCESS) {
+        post sendPacket();
+      }
+    }
+    else if (TOS_NODE_ID == GATEWAY_MOTE) {
+      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(RobotMsg)) != SUCCESS) {
         post sendPacket();
       }
     }

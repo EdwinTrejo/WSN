@@ -8,7 +8,7 @@
 
 // sampling frequency in binary milliseconds
 #define SAMPLING_FREQUENCY 100
-#define ROBOT_LISTEN_FREQUENCY 50
+#define ROBOT_LISTEN_FREQUENCY 10
 
 #define ROBOT_MOTE 0
 #define GATEWAY_MOTE 1
@@ -21,5 +21,9 @@ typedef nx_struct LightMsg {
 	nx_uint16_t nodeid;
   nx_uint16_t light;
 } LightMsg;
+
+typedef nx_struct RobotMsg {
+	nx_uint8_t instruction;
+} RobotMsg;
 
 #endif //DEFINITIONS_H__
