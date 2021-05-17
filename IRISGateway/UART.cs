@@ -98,7 +98,51 @@ namespace IRISGateway.UART
 
         public string Read(UARTManager _uart)
         {
-            return _uart.serialPort.ReadLine();
+            return CleanString(_uart.serialPort.ReadLine());
+        }
+
+        private string CleanString(string _str)
+        {
+            StringBuilder _strbldr = new StringBuilder();
+            foreach (char _chr in _str)
+            {
+                if ((_chr >= '0' && _chr <= '9') || (_chr >= 'A' && _chr <= 'Z') || (_chr == ':'))
+                {
+                    _strbldr.Append(_chr);
+                }
+            }
+            return _strbldr.ToString();
+        }
+
+        private string CleanCleanString(string _str)
+        {
+            StringBuilder _strbldr_NUM = new StringBuilder();
+
+            bool ID = false, RSSI = false, LIGHT = false;
+
+            if (_str.Contains('L') && _str.Contains('I') && _str.Contains('G') && _str.Contains('H') && _str.Contains('T'))
+            {
+                LIGHT = true;
+            }
+            else if (_str.Contains('R') && _str.Contains('S') && _str.Contains('I'))
+            {
+                RSSI = true;
+            }
+            else if (_str.Contains('I') && _str.Contains('D'))
+            {
+                ID = true;
+            }
+
+            foreach (char _chr in _str)
+            {
+                //find number
+
+                if ((_chr >= '0' && _chr <= '9') || (_chr >= 'A' && _chr <= 'Z') || (_chr == ':'))
+                {
+                    _strbldr_NUM.Append(_chr);
+                }
+            }
+            return _strbldr_NUM.ToString();
         }
 
         #endregion METHODS

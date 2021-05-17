@@ -12,10 +12,10 @@ namespace IRISGateway
         /// <summary>
         /// UART lock for async send and receive
         /// </summary>
-        public object UART_lock;
+        public static bool UART_locked;
 
         public static UARTManager _uart;
-        
+
         public static bool wait_for_cancel = true;
 
         public static bool robot_instruction_ready = false;
@@ -33,8 +33,12 @@ namespace IRISGateway
             {
                 while (wait_for_cancel)
                 {
-                    var readval = _uart.Read(_uart);
-                    Console.WriteLine(readval);
+                    Thread.Sleep(1);
+                    if (UART_locked == false)
+                    {
+                        var readval = _uart.Read(_uart);
+                        Console.WriteLine(readval);
+                    }
                 }
             }, token);
 
@@ -56,6 +60,13 @@ namespace IRISGateway
 
             while (wait_for_cancel)
             {
+                Thread.Sleep(1000 * 4); //sleep for 30 seconds
+                UART_locked = true;
+                //thread regulated task here
+                Console.WriteLine("Thread is locked");
+                Thread.Sleep(1000 * 4);
+                UART_locked = false;
+                //find the averages and run the guess}
                 if (!wait_for_cancel) Console.WriteLine("Program Complete");
             }
 
