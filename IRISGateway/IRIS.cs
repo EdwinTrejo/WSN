@@ -31,13 +31,13 @@ namespace IRISGateway.IRIS
         /// </summary>
         /// <param name="_dvc"></param>
         /// <param name="_msg"></param>
-        public void AddMsg(IRISDevice _dvc, IRISMsg _msg)
+        public static void AddMsg(IRISDevice _dvc, IRISMsg _msg)
         {
             _dvc.messages.Push(_msg);
         }
 
         //find average light and delete buffer
-        public double GetAverageLight(IRISDevice _dvc)
+        public static double GetAverageLight(IRISDevice _dvc)
         {
             double _avg = 0;
             int _count = _dvc.messages.Count();
@@ -53,7 +53,7 @@ namespace IRISGateway.IRIS
         }
 
         //send last rssi
-        public int GetLastRSSI(IRISDevice _dvc)
+        public static int GetLastRSSI(IRISDevice _dvc)
         {
             return _dvc.messages.First().RSSI;
         }
@@ -64,7 +64,7 @@ namespace IRISGateway.IRIS
 
         public List<IRISDevice> devices;
 
-        public const int LIGHT_THRESHOLD = 700;
+        public const int LIGHT_THRESHOLD = 825;
 
         public IRISManager()
         {
@@ -72,13 +72,18 @@ namespace IRISGateway.IRIS
             devices = new List<IRISDevice>();
         }
 
-        public int FindFireDevice(IRISManager _mngr)
+        public static IRISDevice GetDeviceByID(IRISManager _mngr, int _ID)
+        {
+            return _mngr.devices.Select(x => x).Where(x => x.NODEID == _ID).FirstOrDefault();
+        }
+
+        public static int FindFireDevice(IRISManager _mngr)
         {
             List<Tuple<int, double>> light_readings = new List<Tuple<int, double>>();
 
             foreach(var _dvc in _mngr.devices)
             {
-                double light = _dvc.GetAverageLight(_dvc);
+                double light = IRISDevice.GetAverageLight(_dvc);
                 int id = _dvc.NODEID;
                 light_readings.Add(new Tuple<int, double>(id, light));
             }
