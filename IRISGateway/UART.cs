@@ -1,4 +1,4 @@
-﻿using IRISGateway.IRIS;
+using IRISGateway.IRIS;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
