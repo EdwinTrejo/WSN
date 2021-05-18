@@ -64,9 +64,11 @@ implementation {
       LightMsg * _msg = (LightMsg *)payload;
       uint8_t rssi = getRssi(bufPtr);
       //LightMsg * _msg = (LightMsg *)bufPtr;
-      printf("RSSI:%u\r\n", rssi);
-      printf("ID:%u\r\n", _msg->nodeid);
-      printf("LIGHT:%u\r\n", _msg->light);
+      //printf("RSSI:%u\r\n", rssi);
+      //printf("ID:%u\r\n", _msg->nodeid);
+      //printf("LIGHT:%u\r\n", _msg->light);
+      printf("%u,%u,%u\r\n", _msg->nodeid, _msg->light, rssi);
+
       call Leds.led2Toggle();
     }
     else if (TOS_NODE_ID == ROBOT_MOTE) {
@@ -102,8 +104,9 @@ implementation {
 
     if (TOS_NODE_ID == GATEWAY_MOTE && TOS_NODE_ID != ROBOT_MOTE) {
       //still have to send the data
-      printf("ID:%u\r\n", TOS_NODE_ID);
-      printf("LIGHT:%u\r\n", data);
+      //printf("ID:%u\r\n", TOS_NODE_ID);
+      //printf("LIGHT:%u\r\n", data);
+      printf("%u,%u,%u\r\n", TOS_NODE_ID, data, 0);
     }
     /*
     if (result == SUCCESS) {
