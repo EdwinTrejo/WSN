@@ -100,7 +100,16 @@ namespace IRISGateway.UART
         public IRISMsg Read(UARTManager _uart)
         {
             //_uart.serialPort.DiscardInBuffer();
-            return CleanString(_uart.serialPort.ReadLine());
+            IRISMsg _mssg = new IRISMsg() { NODEID = 4 };
+            try
+            {
+                _mssg = CleanString(_uart.serialPort.ReadLine());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("UART::RX::ERROR");
+            }
+            return _mssg;
         }
 
         private IRISMsg CleanString(string _str)
