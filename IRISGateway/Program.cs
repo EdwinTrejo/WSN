@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using IRISGateway.IRIS;
@@ -13,7 +14,7 @@ namespace IRISGateway
         /// <summary>
         /// UART lock for async send and receive
         /// </summary>
-        public static bool UART_locked;
+        public static bool UART_locked = false;
 
         private static readonly object UART_lock = new object();
 
@@ -43,8 +44,9 @@ namespace IRISGateway
             {
                 while (wait_for_cancel)
                 {
-                    Thread.Sleep(1);
+                    Thread.Sleep(10);
                     if (UART_locked == false)
+                    //lock (UART_lock)
                     {
                         lock (UART_lock)
                         {
@@ -62,20 +64,28 @@ namespace IRISGateway
             {
                 while (wait_for_cancel)
                 {
-                    byte[] msg = new byte[] { (byte)'\0' };
-                    Thread.Sleep(1000 * 5); //sleep for 30 seconds
+                    //message moves the robot forward with safe mode of operation
+                    //move 40 cm and stop
+                    //byte[] msg = new byte[] { 128, 131, 137, 1, 44, 128, 0, 156, 1, 144, 137, 0, 0, 0, 0 };
+                    string send_move_forward_command = "128131137144128015611441370000";
+                    byte[] msg = Encoding.ASCII.GetBytes(send_move_forward_command);
+                    Thread.Sleep(1000 * 10); //sleep for 10 seconds
                     lock (UART_lock)
                     {
-                        UART_locked = true;
                         //thread regulated task here
-                        Console.WriteLine("Thread is locked");
+                        Console.WriteLine("LOCK::MAIN::THREAD");
+                        UART_locked = true;
                         int node = IRISManager.FindFireDevice(_iris_managers);
-                        if (node != 0) Console.WriteLine($"Fire Node: {node}");
+                        if (node != 0)
+                        {
+                            _uart.Write(_uart, msg);
+                            Console.WriteLine($"Fire Node: {node}");
+                        }
                         else Console.WriteLine("No Nodes on fire");
-                        //Thread.Sleep(1000 * 4);
-                        _uart.Write(_uart, msg);
-                        UART_locked = false;
+                        Thread.Sleep(1000 * 2);
+                        _uart.serialPort.DiscardInBuffer();
                     }
+                    UART_locked = false;
                 }
             }, token);
 
