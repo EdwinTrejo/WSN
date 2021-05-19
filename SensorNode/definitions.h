@@ -22,6 +22,12 @@ typedef nx_struct LightMsg {
   nx_uint16_t light;
 } LightMsg;
 
+typedef nx_struct RssiMsg {
+	nx_uint16_t nodeid;
+  nx_uint16_t light;
+	nx_uint16_t rssi;
+} RssiMsg;
+
 typedef nx_struct RobotMsg {
 	nx_uint16_t nodeid;
 	nx_uint8_t instruction;

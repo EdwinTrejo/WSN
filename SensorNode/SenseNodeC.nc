@@ -15,8 +15,17 @@ module SenseNodeC {
 }
 
 implementation {
-  message_t packet; //buf
-  message_t * rcv_packet; //receivedBuf
+  message_t packet_light; //buf
+  message_t * rcv_packet_light; //receivedBuf
+
+  message_t packet_robot; //buf
+  message_t * rcv_packet_robot; //receivedBuf
+
+  message_t packet_rssi; //buf
+  message_t * rcv_packet_rssi; //receivedBuf
+
+  bool gateway_send_robot_message = FALSE;
+  bool robot_rx_light = FALSE;
 
   task void readSensor();
   task void sendPacket();
@@ -28,12 +37,15 @@ implementation {
   }
 
   event void Timer.fired() {
-    if (TOS_NODE_ID != ROBOT_MOTE)
-      post readSensor();
-    else
+    if (TOS_NODE_ID != ROBOT_MOTE && TOS_NODE_ID != GATEWAY_MOTE) {
+        post readSensor();
+      }
+    else if (TOS_NODE_ID == GATEWAY_MOTE) {
       // something else , I think its check the
       // message buffer and writo to serial
+      post readSensor();
       post receiveRobotInstruction();
+    }
   }
 
   event void RadioControl.startDone(error_t err) {
@@ -51,15 +63,50 @@ implementation {
   }
 
   task void receiveRobotInstruction() {
-    RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet, sizeof(RobotMsg));
+    //this one is tricky because only the robot will have to listen for two packets at once
+    RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet_robot, sizeof(RobotMsg));
     uint8_t new_ins = getchar();
     payload->nodeid = TOS_NODE_ID;
     payload->instruction = new_ins;
+    gateway_send_robot_message = TRUE;
     post sendPacket();
   }
 
   event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
     //message was received
+    if (TOS_NODE_ID == GATEWAY_MOTE) {
+      if(len == sizeof(RssiMsg)) {
+        RssiMsg * _msg = (RssiMsg *)payload;
+        printf("%u,%u,%u\r\n", _msg->nodeid, _msg->light, _msg->rssi);
+        rcv_packet_rssi = bufPtr;
+      }
+    }
+    else if (TOS_NODE_ID == ROBOT_MOTE)
+    {
+      if(len == sizeof(RobotMsg))
+      {
+        RobotMsg * _msg = (RobotMsg *)payload;
+        uint8_t serial_instruction = _msg->instruction;
+        putchar(serial_instruction);
+        rcv_packet_robot = bufPtr;
+        robot_rx_light = FALSE;
+        call Leds.led1Toggle();
+      }
+      else if (len == sizeof(LightMsg))
+      {
+        LightMsg * _msg = (LightMsg *)payload;
+        RssiMsg * payload_rssi = (RssiMsg *)call Packet.getPayload(&packet_rssi, sizeof(RssiMsg));
+        uint8_t rssi = getRssi(bufPtr);
+        payload_rssi->nodeid = _msg->nodeid;
+        payload_rssi->light = _msg->light;
+        payload_rssi->rssi = rssi;
+        rcv_packet_light = bufPtr;
+        robot_rx_light = TRUE;
+        post sendPacket();
+      }
+    }
+
+/*
     if (TOS_NODE_ID == GATEWAY_MOTE) {
       LightMsg * _msg = (LightMsg *)payload;
       uint8_t rssi = getRssi(bufPtr);
@@ -81,6 +128,7 @@ implementation {
       }
     }
     rcv_packet = bufPtr;
+*/
     return bufPtr;
   }
 
@@ -93,43 +141,20 @@ implementation {
   event void Read.readDone(error_t result, uint16_t data)
   {
     //sender
+    //read sensor is complete
     if (result != SUCCESS)
       post readSensor();
     else {
-      LightMsg * payload = (LightMsg *)call Packet.getPayload(&packet, sizeof(LightMsg));
+      LightMsg * payload = (LightMsg *)call Packet.getPayload(&packet_light, sizeof(LightMsg));
       payload->nodeid = TOS_NODE_ID;
       payload->light = data;
+
+      atomic if (TOS_NODE_ID == GATEWAY_MOTE) {
+        gateway_send_robot_message = FALSE;
+      }
+
       post sendPacket();
     }
-
-    if (TOS_NODE_ID == GATEWAY_MOTE && TOS_NODE_ID != ROBOT_MOTE) {
-      //still have to send the data
-      //printf("ID:%u\r\n", TOS_NODE_ID);
-      //printf("LIGHT:%u\r\n", data);
-      printf("%u,%u,%u\r\n", TOS_NODE_ID, data, 0);
-    }
-    /*
-    if (result == SUCCESS) {
-      call Leds.led1On();
-      if (TOS_NODE_ID != GATEWAY_MOTE) {
-        // MOTE #1 is the gateway mote
-        LightMsg _msg;
-        _msg.nodeid = TOS_NODE_ID;
-        _msg.light = data;
-        //memcpy target, source, size
-        memcpy(&packet, &_msg, sizeof(LightMsg));
-        call AMSend.send(GATEWAY_MOTE, &packet, sizeof(LightMsg));
-      }
-      else {
-        // if its already the gateway mote
-        printf("%u\r\n", TOS_NODE_ID);
-        printf("%u\r\n", data);
-      }
-    }
-    else {
-      call Leds.led1Off();
-    }
-    */
   }
 
   uint16_t getRssi(message_t *message)
@@ -141,17 +166,31 @@ implementation {
   }
 
   task void sendPacket() {
-    //sender
-    if (TOS_NODE_ID != GATEWAY_MOTE && TOS_NODE_ID != ROBOT_MOTE) {
-      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(LightMsg)) != SUCCESS) {
-        post sendPacket();
+    //send a Light reading message relative to the irobot node
+    atomic {
+      if (TOS_NODE_ID != ROBOT_MOTE && TOS_NODE_ID != GATEWAY_MOTE) {
+        if (call AMSend.send(AM_BROADCAST_ADDR, &packet_light, sizeof(LightMsg)) != SUCCESS) {
+          post sendPacket();
+        }
       }
-    }
-    else if (TOS_NODE_ID == GATEWAY_MOTE) {
-      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(RobotMsg)) != SUCCESS) {
-        post sendPacket();
+      else if (TOS_NODE_ID == ROBOT_MOTE) {
+        if (call AMSend.send(AM_BROADCAST_ADDR, &packet_rssi, sizeof(RssiMsg)) != SUCCESS) {
+          post sendPacket();
+        }
       }
-    }
+      else if (TOS_NODE_ID == GATEWAY_MOTE){
+        if (gateway_send_robot_message == TRUE){
+          if (call AMSend.send(AM_BROADCAST_ADDR, &packet_robot, sizeof(RobotMsg)) != SUCCESS) {
+            post sendPacket();
+          }
+        }
+        else{
+          if (call AMSend.send(AM_BROADCAST_ADDR, &packet_light, sizeof(LightMsg)) != SUCCESS) {
+            post sendPacket();
+          }
+        }
+      }
+     }
   }
 
 }
