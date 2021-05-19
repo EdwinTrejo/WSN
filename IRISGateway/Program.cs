@@ -59,7 +59,9 @@ namespace IRISGateway
             {
                 while (wait_for_cancel)
                 {
-                    byte[] msg = new byte[] { (byte)'\0' };
+                    //message moves the robot forward with safe mode of operation
+                    //move 40 cm and stop
+                    byte[] msg = new byte[] { 128, 131, 152, 13, 137, 1, 44, 128, 0, 156, 1, 144, 137, 0, 0, 0, 0 };
                     Thread.Sleep(1000 * 5); //sleep for 30 seconds
                     lock (UART_lock)
                     {
