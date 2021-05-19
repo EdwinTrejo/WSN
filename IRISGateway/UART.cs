@@ -13,7 +13,7 @@ namespace IRISGateway.UART
 
         public const int BAUDRATE = 57600;
         public const int DATABITS = 8;
-        public const string PORT = "COM6";
+        public const string PORT = "COM4";
 
         #endregion CONSTANTS
 
@@ -117,7 +117,7 @@ namespace IRISGateway.UART
             try
             {
                 _iris_msg = ProcessLine(_clean_str);
-                //Console.WriteLine($"{_iris_msg.NODEID}, {_iris_msg.LIGHT}, {_iris_msg.RSSI}");
+                Console.WriteLine($"{_iris_msg.NODEID}, {_iris_msg.LIGHT}, {_iris_msg.RSSI}");
                 return _iris_msg;
             } catch (Exception ex)
             {

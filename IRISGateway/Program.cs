@@ -44,15 +44,12 @@ namespace IRISGateway
                 while (wait_for_cancel)
                 {
                     Thread.Sleep(1);
-                    if (UART_locked == false)
+                    lock (UART_lock)
                     {
-                        lock (UART_lock)
+                        IRISMsg new_uart_msg = _uart.Read(_uart);
+                        if (new_uart_msg != null)
                         {
-                            IRISMsg new_uart_msg = _uart.Read(_uart);
-                            if (new_uart_msg != null)
-                            {
-                                IRISDevice.AddMsg(IRISManager.GetDeviceByID(_iris_managers, new_uart_msg.NODEID), new_uart_msg);
-                            }
+                            IRISDevice.AddMsg(IRISManager.GetDeviceByID(_iris_managers, new_uart_msg.NODEID), new_uart_msg);
                         }
                     }
                 }
@@ -66,15 +63,15 @@ namespace IRISGateway
                     Thread.Sleep(1000 * 5); //sleep for 30 seconds
                     lock (UART_lock)
                     {
-                        UART_locked = true;
                         //thread regulated task here
                         Console.WriteLine("Thread is locked");
                         int node = IRISManager.FindFireDevice(_iris_managers);
-                        if (node != 0) Console.WriteLine($"Fire Node: {node}");
+                        if (node != 0)
+                        {
+                            _uart.Write(_uart, msg);
+                            Console.WriteLine($"Fire Node: {node}");
+                        }
                         else Console.WriteLine("No Nodes on fire");
-                        //Thread.Sleep(1000 * 4);
-                        _uart.Write(_uart, msg);
-                        UART_locked = false;
                     }
                 }
             }, token);

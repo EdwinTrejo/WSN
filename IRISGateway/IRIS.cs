@@ -45,8 +45,8 @@ namespace IRISGateway.IRIS
             {
                 _avg += _msg.LIGHT;
             }
-
             //clear the buffer and start again
+            Console.WriteLine($"CLEAR::IRIS::LIST::{_dvc.NODEID}");
             _dvc.messages.Clear();
 
             return (double)(_avg / _count);
