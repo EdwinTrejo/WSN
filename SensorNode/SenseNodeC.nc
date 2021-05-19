@@ -5,6 +5,8 @@ module SenseNodeC {
     interface Boot;
     interface Read<uint16_t>;
     interface SplitControl as RadioControl;
+    interface UartByte;
+    interface UartStream;
     interface AMSend;
     interface Receive;
     interface Packet;
@@ -29,23 +31,45 @@ implementation {
 
   task void readSensor();
   task void sendPacket();
-  task void receiveRobotInstruction();
+  task void writeToSerial();
+  //task void receiveRobotInstruction();
   uint16_t getRssi(message_t *message);
 
   event void Boot.booted() {
     call RadioControl.start();
   }
 
-  event void Timer.fired() {
-    if (TOS_NODE_ID != ROBOT_MOTE && TOS_NODE_ID != GATEWAY_MOTE) {
-        post readSensor();
-      }
-    else if (TOS_NODE_ID == GATEWAY_MOTE) {
-      // something else , I think its check the
-      // message buffer and writo to serial
-      post readSensor();
-      post receiveRobotInstruction();
+  async event void UartStream.receivedByte(uint8_t byte) {
+    atomic {
+      RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet_robot, sizeof(RobotMsg));
+      payload->nodeid = TOS_NODE_ID;
+      payload->instruction = byte;
+      gateway_send_robot_message = TRUE;
+      call Leds.led2Toggle();
+      post sendPacket();
     }
+  }
+
+  async event void UartStream.receiveDone(uint8_t * buf, uint16_t len,
+			error_t error) {
+	}
+
+  async event void UartStream.sendDone(uint8_t * buf, uint16_t len,
+			error_t error) {
+    }
+
+  event void Timer.fired() {
+    if (TOS_NODE_ID != ROBOT_MOTE) {
+        post readSensor();
+    }
+    /*
+      else if (TOS_NODE_ID == GATEWAY_MOTE) {
+        // something else , I think its check the
+        // message buffer and writo to serial
+        post readSensor();
+        //post receiveRobotInstruction();
+      }
+    */
   }
 
   event void RadioControl.startDone(error_t err) {
@@ -62,19 +86,31 @@ implementation {
       post readSensor();
   }
 
-  task void receiveRobotInstruction() {
-    //this one is tricky because only the robot will have to listen for two packets at once
-    RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet_robot, sizeof(RobotMsg));
-    uint8_t new_ins = 0;
-    atomic {
-      new_ins = getchar();
+  task void writeToSerial(){
+    if (TOS_NODE_ID == ROBOT_MOTE) {
+      RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet_robot, sizeof(RobotMsg));
+      call Leds.led0Toggle();
+      putchar(payload->instruction);
     }
-    payload->nodeid = TOS_NODE_ID;
-    payload->instruction = new_ins;
-    gateway_send_robot_message = TRUE;
-    call Leds.led2Toggle();
-    post sendPacket();
   }
+
+  /*
+    task void receiveRobotInstruction() {
+      //this one is tricky because only the robot will have to listen for two packets at once
+      RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet_robot, sizeof(RobotMsg));
+      uint8_t new_ins = 0;
+      atomic {
+        new_ins = getchar();
+      }
+      payload->nodeid = TOS_NODE_ID;
+      payload->instruction = new_ins;
+      atomic {
+        gateway_send_robot_message = TRUE;
+      }
+      call Leds.led2Toggle();
+      post sendPacket();
+    }
+  */
 
   event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
     //message was received
@@ -89,11 +125,11 @@ implementation {
     {
       if(len == sizeof(RobotMsg))
       {
-        RobotMsg * _msg = (RobotMsg *)payload;
-        printf("%u", _msg->instruction);
+        //RobotMsg * _msg = (RobotMsg *)payload;
+        //printf("%c", (char)_msg->instruction);
         rcv_packet_robot = bufPtr;
         robot_rx_light = FALSE;
-        call Leds.led0Toggle();
+        post writeToSerial();
       }
       else if (len == sizeof(LightMsg))
       {

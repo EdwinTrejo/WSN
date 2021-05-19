@@ -12,6 +12,7 @@ implementation {
   components PrintfC;
   components SerialStartC;
   components RF230ActiveMessageC;
+  components Atm128Uart0C as uart;
 
   SenseNodeC -> RF230ActiveMessageC.PacketRSSI;
   SenseNodeC.Boot -> MainC;
@@ -22,4 +23,7 @@ implementation {
   SenseNodeC.AMSend -> AMSenderC;
   SenseNodeC.Receive -> AMReceiverC;
   SenseNodeC.Packet -> ActiveMessageC;
+
+  SenseNodeC.UartByte -> uart.UartByte;
+  SenseNodeC.UartStream -> uart.UartStream;
 }
