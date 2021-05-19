@@ -65,10 +65,14 @@ implementation {
   task void receiveRobotInstruction() {
     //this one is tricky because only the robot will have to listen for two packets at once
     RobotMsg * payload = (RobotMsg *)call Packet.getPayload(&packet_robot, sizeof(RobotMsg));
-    uint8_t new_ins = getchar();
+    uint8_t new_ins = 0;
+    atomic {
+      new_ins = getchar();
+    }
     payload->nodeid = TOS_NODE_ID;
     payload->instruction = new_ins;
     gateway_send_robot_message = TRUE;
+    call Leds.led2Toggle();
     post sendPacket();
   }
 
@@ -90,7 +94,7 @@ implementation {
         putchar(serial_instruction);
         rcv_packet_robot = bufPtr;
         robot_rx_light = FALSE;
-        call Leds.led1Toggle();
+        call Leds.led0Toggle();
       }
       else if (len == sizeof(LightMsg))
       {
@@ -102,33 +106,10 @@ implementation {
         payload_rssi->rssi = rssi;
         rcv_packet_light = bufPtr;
         robot_rx_light = TRUE;
+        call Leds.led1Toggle();
         post sendPacket();
       }
     }
-
-/*
-    if (TOS_NODE_ID == GATEWAY_MOTE) {
-      LightMsg * _msg = (LightMsg *)payload;
-      uint8_t rssi = getRssi(bufPtr);
-      //LightMsg * _msg = (LightMsg *)bufPtr;
-      //printf("RSSI:%u\r\n", rssi);
-      //printf("ID:%u\r\n", _msg->nodeid);
-      //printf("LIGHT:%u\r\n", _msg->light);
-      printf("%u,%u,%u\r\n", _msg->nodeid, _msg->light, rssi);
-
-      call Leds.led2Toggle();
-    }
-    else if (TOS_NODE_ID == ROBOT_MOTE) {
-      //message type will include a byte to run the code
-      RobotMsg * _msg = (RobotMsg *)payload;
-      if (_msg->nodeid == GATEWAY_MOTE) {
-        uint8_t serial_instruction = _msg->instruction;
-        putchar(serial_instruction);
-        call Leds.led1Toggle();
-      }
-    }
-    rcv_packet = bufPtr;
-*/
     return bufPtr;
   }
 
