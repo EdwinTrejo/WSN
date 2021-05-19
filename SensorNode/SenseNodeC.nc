@@ -90,8 +90,7 @@ implementation {
       if(len == sizeof(RobotMsg))
       {
         RobotMsg * _msg = (RobotMsg *)payload;
-        uint8_t serial_instruction = _msg->instruction;
-        putchar(serial_instruction);
+        printf("%u", _msg->instruction);
         rcv_packet_robot = bufPtr;
         robot_rx_light = FALSE;
         call Leds.led0Toggle();
