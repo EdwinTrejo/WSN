@@ -99,6 +99,7 @@ namespace IRISGateway.UART
 
         public IRISMsg Read(UARTManager _uart)
         {
+            //_uart.serialPort.DiscardInBuffer();
             return CleanString(_uart.serialPort.ReadLine());
         }
 
