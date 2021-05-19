@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,6 +30,17 @@ namespace IRISGateway
 
         public static async Task Main()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //process can only be run as admin realtime on windows
+                Process[] processes = Process.GetProcessesByName("IRISGateway");
+                foreach (var proc in processes)
+                {
+                    proc.PriorityClass = ProcessPriorityClass.RealTime;
+                }
+                Console.WriteLine("IRIS::Admin::RealTime");
+            }
+
             _uart = new UARTManager();
             _iris_managers = new IRISManager();
             _iris_managers.devices.Add(new IRISDevice() { NODEID = 1 });
@@ -48,15 +61,15 @@ namespace IRISGateway
                     if (UART_locked == false)
                     //lock (UART_lock)
                     {
-                        lock (UART_lock)
-                        {
+                        //lock (UART_lock)
+                        //{
                             IRISMsg new_uart_msg = _uart.Read(_uart);
                             if (new_uart_msg != null)
                             {
                                 IRISDevice.AddMsg(IRISManager.GetDeviceByID(_iris_managers, new_uart_msg.NODEID), new_uart_msg);
                             }
                         }
-                    }
+                    //}
                 }
             }, token);
 
@@ -70,8 +83,8 @@ namespace IRISGateway
                     string send_move_forward_command = "128131137144128015611441370000";
                     byte[] msg = Encoding.ASCII.GetBytes(send_move_forward_command);
                     Thread.Sleep(1000 * 10); //sleep for 10 seconds
-                    lock (UART_lock)
-                    {
+                    //lock (UART_lock)
+                    //{
                         //thread regulated task here
                         Console.WriteLine("LOCK::MAIN::THREAD");
                         UART_locked = true;
@@ -84,7 +97,7 @@ namespace IRISGateway
                         else Console.WriteLine("No Nodes on fire");
                         Thread.Sleep(1000 * 2);
                         _uart.serialPort.DiscardInBuffer();
-                    }
+                    //}
                     UART_locked = false;
                 }
             }, token);

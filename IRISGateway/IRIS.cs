@@ -33,6 +33,7 @@ namespace IRISGateway.IRIS
         /// <param name="_msg"></param>
         public static void AddMsg(IRISDevice _dvc, IRISMsg _msg)
         {
+            if (_dvc == null) return;
             _dvc.messages.Push(_msg);
         }
 
